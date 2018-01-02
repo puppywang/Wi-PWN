@@ -76,6 +76,20 @@ void Settings::load() {
   for (int i = 0; i < passwordClientLen; i++) passwordClient += (char)EEPROM.read(passwordClientAdr + i);
   hostnameLen = EEPROM.read(hostnameLenAdr);
   for (int i = 0; i < hostnameLen; i++) hostname += (char)EEPROM.read(hostnameAdr + i);
+
+  attackSsidLen = EEPROM.read(attackSsidLenAdr);
+  for (int i = 0; i < attackSsidLen; i++) attackSsid += (char)EEPROM.read(attackSsidAdr + i);
+
+  attackSsid2Len = EEPROM.read(attackSsid2LenAdr);
+  for (int i = 0; i < attackSsid2Len; i++) attackSsid2 += (char)EEPROM.read(attackSsid2Adr + i);
+
+  for(int i=0; i<6; i++){
+    attackClient.setAt((uint8_t)EEPROM.read(attackClientAdr+i),i);
+  }
+
+  for(int i=0; i<6; i++){
+    attackClient2.setAt((uint8_t)EEPROM.read(attackClient2Adr+i),i);
+  }
   
   if ((int)EEPROM.read(apChannelAdr) >= 1 && (int)EEPROM.read(apChannelAdr) <= 14) {
     apChannel = (int)EEPROM.read(apChannelAdr);
@@ -157,6 +171,11 @@ void Settings::reset() {
   detectorScanTime = 200;
   pins = "000000";
   pinNames = "Pin 3;Pin 4;Pin 5;Pin 6;Pin 7;Pin 8"; 
+  attackSsid = "";
+  attackSsid2 = "";
+  attackClient.set(0, 0, 0, 0, 0, 0);
+  attackClient2.set(0, 0, 0, 0, 0, 0);
+  
   if (debug) Serial.println("Reset complete!");
 
   save();
@@ -190,6 +209,21 @@ void Settings::save() {
   hostnameLen = hostname.length();
   EEPROM.write(hostnameLenAdr, hostnameLen);
   for (int i = 0; i < hostnameLen; i++) EEPROM.write(hostnameAdr + i, hostname[i]);
+
+  attackSsidLen = attackSsid.length();
+  EEPROM.write(attackSsidLenAdr, attackSsidLen);
+  for (int i = 0; i < attackSsidLen; i++) EEPROM.write(attackSsidAdr + i, attackSsid[i]);
+  attackSsid2Len = attackSsid2.length();
+  EEPROM.write(attackSsid2LenAdr, attackSsid2Len);
+  for (int i = 0; i < attackSsid2Len; i++) EEPROM.write(attackSsid2Adr + i, attackSsid2[i]);
+  
+  for (int i = 0; i < 6; i++) {
+    EEPROM.write(attackClientAdr + i, attackClient._get(i));
+  }
+
+  for (int i = 0; i < 6; i++) {
+    EEPROM.write(attackClient2Adr + i, attackClient2._get(i));
+  }
 
   EEPROM.write(apScanHiddenAdr, apScanHidden);
 
@@ -255,6 +289,7 @@ void Settings::info() {
   Serial.println("  Deauth Detector : all-channels='" + (String)detectorAllChannels + "'\t\t|  channel='" + (String)detectorChannel + "'\t\t\t|  alert-pin='" + (String)alertPin + "'\t|  invert-pin='" + (String)invertAlertPin + "'\t|  scan-time='" + (String)detectorScanTime + "'");
   Serial.println("  Other           : channel-hopping='" + (String)channelHop + "'\t\t|  multiple-aps='" + (String)multiAPs + "'\t\t|  multiple-attacks='" + (String)multiAttacks + "'");
   Serial.println("  PIN Control     : state='" + (String)pins + "'\t\t|  names='" + (String)pinNames + "'");
+  Serial.println("  Attach Target   : ssid1='" + attackSsid + "'\t\t|  ssid2='" + attackSsid2 + "'\t\t\t|  client1='" + attackClient.toString() + "'\t\t\t|  client2='" + attackClient2.toString() + "'");
   Serial.println("");
 }
 

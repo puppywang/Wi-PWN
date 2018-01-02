@@ -60,6 +60,12 @@ extern NameList nameList;
 #define passwordClientAdr 1227
 #define hostnameLenAdr 1259
 #define hostnameAdr 1260
+#define attackSsidLenAdr 1272
+#define attackSsidAdr 1273
+#define attackSsid2LenAdr 1305
+#define attackSsid2Adr 1306
+#define attackClientAdr 1338
+#define attackClient2Adr 1344
 
 #define checkNumAdr 3000
 #define checkNum 16
@@ -89,6 +95,14 @@ class Settings
     String passwordClient = "";
     int hostnameLen;
     String hostname = "";
+
+    int attackSsidLen;
+    String attackSsid = "";
+    int attackSsid2Len;
+    String attackSsid2 = "";
+
+    Mac attackClient;
+    Mac attackClient2;
     
     bool apScanHidden;
     uint8_t deauthReason;

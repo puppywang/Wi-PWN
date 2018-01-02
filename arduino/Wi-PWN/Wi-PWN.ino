@@ -326,6 +326,21 @@ void selectAP() {
     server.send( 200, "text/json", "true");
     // Remove below in a future update
     attack.stopAll();
+    // Save the first two select AP.
+    settings.attackSsid = "";
+    settings.attackSsid2 = "";
+    int _index = 0;
+    for (int i = 0; i < apScan.results; i++) {
+      if (apScan.isSelected(i)) {
+        if (_index == 0)
+          settings.attackSsid = apScan.getAPName(i);
+        else
+          settings.attackSsid2 = apScan.getAPName(i);
+        _index++;
+        if (_index > 1)
+          break;
+      }
+    }
   }
 }
 
@@ -349,6 +364,21 @@ void selectClient() {
   if (server.hasArg("num")) {
     clientScan.select(server.arg("num").toInt());
     attack.stop(0);
+    // Save first two attacked mac.
+    settings.attackClient.set(0, 0, 0, 0, 0, 0);
+    settings.attackClient2.set(0, 0, 0, 0, 0, 0);
+    int _index = 0;
+    for (int i = 0; i < clientScan.results; i++) {
+      if (clientScan.getClientSelected(i)) {
+        if (_index == 0)
+          settings.attackClient.set(clientScan.getClientMac(i));
+        else
+          settings.attackClient2.set(clientScan.getClientMac(i));
+        _index++;
+        if (_index > 1)
+          break;
+      }
+    }
     server.send( 200, "text/json", "true");
   }
 }
@@ -879,12 +909,36 @@ void loop() {
       // Make sure the device has been powered on for at least 10 seconds (prevents bootloop issue)
       if(digitalRead(0) == LOW && millis() > 10000) {
         Serial.println("FLASH button (GPIO0) pressed!");
+        // Have't scan yet
+        if (apScan.results == 0) {
+          apScan.start();
+          for (int i = 0; i < apScan.results; i++) {
+            if (apScan.getAPName(i) == settings.attackSsid || apScan.getAPName(i) == settings.attackSsid2) {
+              apScan.select(i);
+              Serial.print("Restore AP selection for ssid = ");
+              Serial.println(apScan.getAPName(i));
+            }
+          }
+        }
+        if (clientScan.results == 0) {
+          if (settings.attackClient.valid()) {
+            int clientIndex = clientScan.add(settings.attackClient);
+            clientScan.select(clientIndex);
+            Serial.print("Restore Client selection for client = ");
+            Serial.println(clientScan.getClientMac(clientIndex).toString());
+          }
+          if (settings.attackClient2.valid()) {
+            int clientIndex = clientScan.add(settings.attackClient2);
+            clientScan.select(clientIndex);
+            Serial.print("Restore Client selection for client = ");
+            Serial.println(clientScan.getClientMac(clientIndex).toString());
+          }
+        }
         if(apScan.selectedSum == 0) {
           Serial.println("No networks selected... selecting & deauthing all networks");
           digitalWrite(settings.ledPin, !settings.pinStateOff);
           delay(50);
           digitalWrite(settings.ledPin, settings.pinStateOff);
-          apScan.start();
           apScan.select(-1);
           attack.start(0);
         } else {
